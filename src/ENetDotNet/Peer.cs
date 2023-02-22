@@ -1,216 +1,203 @@
-/** 
- @file  peer.c
- @brief ENet peer management functions
-*/
-#include <string.h>
-#define ENET_BUILDING_LIB 1
-#include "enet/enet.h"
+using System.Net;
 
-/** @defgroup peer ENet peer functions 
-    @{
-*/
+namespace ENetDotNet;
 
-/** Configures throttle parameter for a peer.
-
-    Unreliable packets are dropped by ENet in response to the varying conditions
-    of the Internet connection to the peer.  The throttle represents a probability
-    that an unreliable packet should not be dropped and thus sent by ENet to the peer.
-    The lowest mean round trip time from the sending of a reliable packet to the
-    receipt of its acknowledgement is measured over an amount of time specified by
-    the interval parameter in milliseconds.  If a measured round trip time happens to
-    be significantly less than the mean round trip time measured over the interval, 
-    then the throttle probability is increased to allow more traffic by an amount
-    specified in the acceleration parameter, which is a ratio to the ENET_PEER_PACKET_THROTTLE_SCALE
-    constant.  If a measured round trip time happens to be significantly greater than
-    the mean round trip time measured over the interval, then the throttle probability
-    is decreased to limit traffic by an amount specified in the deceleration parameter, which
-    is a ratio to the ENET_PEER_PACKET_THROTTLE_SCALE constant.  When the throttle has
-    a value of ENET_PEER_PACKET_THROTTLE_SCALE, no unreliable packets are dropped by 
-    ENet, and so 100% of all unreliable packets will be sent.  When the throttle has a
-    value of 0, all unreliable packets are dropped by ENet, and so 0% of all unreliable
-    packets will be sent.  Intermediate values for the throttle represent intermediate
-    probabilities between 0% and 100% of unreliable packets being sent.  The bandwidth
-    limits of the local and foreign hosts are taken into account to determine a 
-    sensible limit for the throttle probability above which it should not raise even in
-    the best of conditions.
-
-    @param peer peer to configure 
-    @param interval interval, in milliseconds, over which to measure lowest mean RTT; the default value is ENET_PEER_PACKET_THROTTLE_INTERVAL.
-    @param acceleration rate at which to increase the throttle probability as mean RTT declines
-    @param deceleration rate at which to decrease the throttle probability as mean RTT increases
-*/
-void
-enet_peer_throttle_configure (ENetPeer * peer, enet_uint32 interval, enet_uint32 acceleration, enet_uint32 deceleration)
-{
-    ENetProtocol command;
-
-    peer -> packetThrottleInterval = interval;
-    peer -> packetThrottleAcceleration = acceleration;
-    peer -> packetThrottleDeceleration = deceleration;
-
-    command.header.command = ENET_PROTOCOL_COMMAND_THROTTLE_CONFIGURE | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
-    command.header.channelID = 0xFF;
-
-    command.throttleConfigure.packetThrottleInterval = ENET_HOST_TO_NET_32 (interval);
-    command.throttleConfigure.packetThrottleAcceleration = ENET_HOST_TO_NET_32 (acceleration);
-    command.throttleConfigure.packetThrottleDeceleration = ENET_HOST_TO_NET_32 (deceleration);
-
-    enet_peer_queue_outgoing_command (peer, & command, NULL, 0, 0);
-}
-
-int
-enet_peer_throttle (ENetPeer * peer, enet_uint32 rtt)
-{
-    if (peer -> lastRoundTripTime <= peer -> lastRoundTripTimeVariance)
+partial class ENetPeer {
+    /// <summary>
+    /// Configures throttle parameter for a peer.
+    /// <para>
+    /// Unreliable packets are dropped by ENet in response to the varying conditions
+    /// of the Internet connection to the peer.  The throttle represents a probability
+    /// that an unreliable packet should not be dropped and thus sent by ENet to the peer.
+    /// The lowest mean round trip time from the sending of a reliable packet to the
+    /// receipt of its acknowledgement is measured over an amount of time specified by
+    /// the interval parameter in milliseconds.  If a measured round trip time happens to
+    /// be significantly less than the mean round trip time measured over the interval, 
+    /// then the throttle probability is increased to allow more traffic by an amount
+    /// specified in the acceleration parameter, which is a ratio to the ENET_PEER_PACKET_THROTTLE_SCALE
+    /// constant.  If a measured round trip time happens to be significantly greater than
+    /// the mean round trip time measured over the interval, then the throttle probability
+    /// is decreased to limit traffic by an amount specified in the deceleration parameter, which
+    /// is a ratio to the ENET_PEER_PACKET_THROTTLE_SCALE constant.  When the throttle has
+    /// a value of ENET_PEER_PACKET_THROTTLE_SCALE, no unreliable packets are dropped by 
+    /// ENet, and so 100% of all unreliable packets will be sent.  When the throttle has a
+    /// value of 0, all unreliable packets are dropped by ENet, and so 0% of all unreliable
+    /// packets will be sent.  Intermediate values for the throttle represent intermediate
+    /// probabilities between 0% and 100% of unreliable packets being sent.  The bandwidth
+    /// limits of the local and foreign hosts are taken into account to determine a 
+    /// sensible limit for the throttle probability above which it should not raise even in
+    /// the best of conditions.
+    /// </para>
+    /// <param name="interval">Interval over which to measure lowest mean RTT; the default value is ENET_PEER_PACKET_THROTTLE_INTERVAL.</param>
+    /// <param name="acceleration">Rate at which to increase the throttle probability as mean RTT declines.</param>
+    /// <param name="deceleration">Rate at which to decrease the throttle probability as mean RTT increases.</param>
+    public void ConfigureThrottle(TimeSpan interval, uint acceleration, uint deceleration)
     {
-        peer -> packetThrottle = peer -> packetThrottleLimit;
-    }
-    else
-    if (rtt <= peer -> lastRoundTripTime)
-    {
-        peer -> packetThrottle += peer -> packetThrottleAcceleration;
+        ENetProtocol command;
 
-        if (peer -> packetThrottle > peer -> packetThrottleLimit)
-          peer -> packetThrottle = peer -> packetThrottleLimit;
+        PacketThrottleInterval = interval;
+        PacketThrottleAcceleration = acceleration;
+        PacketThrottleDeceleration = deceleration;
 
-        return 1;
-    }
-    else
-    if (rtt > peer -> lastRoundTripTime + 2 * peer -> lastRoundTripTimeVariance)
-    {
-        if (peer -> packetThrottle > peer -> packetThrottleDeceleration)
-          peer -> packetThrottle -= peer -> packetThrottleDeceleration;
-        else
-          peer -> packetThrottle = 0;
+        command.Header.Command = ENetProtocolCommand.ThrottleConfigure | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
+        command.Header.ChannelId = 0xFF;
 
-        return -1;
+        command.ThrottleConfigure.PacketThrottleInterval = (uint)IPAddress.HostToNetworkOrder(interval.Ticks / TimeSpan.TicksPerMillisecond);
+        command.ThrottleConfigure.PacketThrottleAcceleration = IPAddress.HostToNetworkOrder(acceleration);
+        command.ThrottleConfigure.PacketThrottleDeceleration = IPAddress.HostToNetworkOrder(deceleration);
+
+        QueueOutgoingCommand(ref command, null, 0, 0);
     }
 
-    return 0;
-}
+    public int Throttle(uint rtt)
+    {
+        if (LastRoundTripTime <= LastRoundTripTimeVariance)
+        {
+            PacketThrottle = PacketThrottleLimit;
+        }
+        else if (rtt <= LastRoundTripTime)
+        {
+            PacketThrottle += PacketThrottleAcceleration;
 
-/** Queues a packet to be sent.
-    @param peer destination for the packet
-    @param channelID channel on which to send
-    @param packet packet to send
-    @retval 0 on success
-    @retval < 0 on failure
-*/
-int
-enet_peer_send (ENetPeer * peer, enet_uint8 channelID, ENetPacket * packet)
-{
-   ENetChannel * channel = & peer -> channels [channelID];
-   ENetProtocol command;
-   size_t fragmentLength;
+            if (PacketThrottle > PacketThrottleLimit)
+              PacketThrottle = PacketThrottleLimit;
 
-   if (peer -> state != ENET_PEER_STATE_CONNECTED ||
-       channelID >= peer -> channelCount ||
-       packet -> dataLength > peer -> host -> maximumPacketSize)
-     return -1;
+            return 1;
+        }
+        else if (rtt > LastRoundTripTime + 2 * LastRoundTripTimeVariance)
+        {
+            if (PacketThrottle > PacketThrottleDeceleration)
+              PacketThrottle -= PacketThrottleDeceleration;
+            else
+              PacketThrottle = 0;
 
-   fragmentLength = peer -> mtu - sizeof (ENetProtocolHeader) - sizeof (ENetProtocolSendFragment);
-   if (peer -> host -> checksum != NULL)
-     fragmentLength -= sizeof(enet_uint32);
+            return -1;
+        }
 
-   if (packet -> dataLength > fragmentLength)
-   {
-      enet_uint32 fragmentCount = (packet -> dataLength + fragmentLength - 1) / fragmentLength,
-             fragmentNumber,
-             fragmentOffset;
-      enet_uint8 commandNumber;
-      enet_uint16 startSequenceNumber; 
-      ENetList fragments;
-      ENetOutgoingCommand * fragment;
+        return 0;
+    }
 
-      if (fragmentCount > ENET_PROTOCOL_MAXIMUM_FRAGMENT_COUNT)
+    /// <summary>
+    /// Queues a packet to be sent.
+    /// </summary>
+    /// <param name="channelId">Channel on which to send.</param>
+    /// <param name="packet">Packet to send.</param>
+    /// <returns><c>0</c> on success, <c>&lt; 0</c> on failure.</returns>
+    public int Send(byte channelId, ref ENetPacket packet)
+    {
+      ref ENetChannel channel = ref Channels[channelId];
+      ENetProtocol command;
+      size_t fragmentLength;
+
+      if (State != ENetPeerState.Connected ||
+          channelId >= ChannelCount ||
+          packet.Data.Length > Host.MaximumPacketSize)
         return -1;
 
-      if ((packet -> flags & (ENET_PACKET_FLAG_RELIABLE | ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT)) == ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT &&
-          channel -> outgoingUnreliableSequenceNumber < 0xFFFF)
+      fragmentLength = Mtu - sizeof(ENetProtocolHeader) - sizeof(ENetProtocolSendFragment);
+      if (Host.Checksum is not null)
+        fragmentLength -= sizeof(uint);
+
+      if (packet.Data.Length > fragmentLength)
       {
-         commandNumber = ENET_PROTOCOL_COMMAND_SEND_UNRELIABLE_FRAGMENT;
-         startSequenceNumber = ENET_HOST_TO_NET_16 (channel -> outgoingUnreliableSequenceNumber + 1);
+          uint fragmentCount = (packet.Data.Length + fragmentLength - 1) / fragmentLength,
+                fragmentNumber,
+                fragmentOffset;
+          ENetProtocolCommand commandNumber;
+          ushort startSequenceNumber; 
+          LinkedList<ENetOutgoingCommand> fragments;
+          ENetOutgoingCommand fragment;
+
+          if (fragmentCount > ENetProtocol.MaximumFragmentCount)
+              return -1;
+
+          if ((packet.Flags & (ENetPacketFlag.Reliable | ENetPacketFlag.UnreliableFragment)) == ENetPacketFlag.UnreliableFragment &&
+              channel.OutgoingUnreliableSequenceNumber < 0xFFFF)
+          {
+            commandNumber = ENetProtocolCommand.SendUnreliableFragment;
+            startSequenceNumber = unchecked((ushort)IPAddress.HostToNetworkOrder((short)channel.OutgoingUnreliableSequenceNumber + 1));
+          }
+          else
+          {
+            commandNumber = ENetProtocolCommand.SendFragment | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
+            startSequenceNumber = unchecked((ushort)IPAddress.HostToNetworkOrder((short)(channel.OutgoingReliableSequenceNumber + 1)));
+          }
+          
+          fragments.Clear();
+
+          for (fragmentNumber = 0,
+                fragmentOffset = 0;
+              fragmentOffset < packet.Data.Length;
+              ++ fragmentNumber,
+                fragmentOffset += fragmentLength)
+          {
+            if (packet.Data.Length - fragmentOffset < fragmentLength)
+              fragmentLength = packet.Data.Length - fragmentOffset;
+
+            fragment = (ENetOutgoingCommand *) enet_malloc (sizeof (ENetOutgoingCommand));
+            if (fragment is null)
+            {
+                while (! enet_list_empty (& fragments))
+                {
+                  fragment = (ENetOutgoingCommand *) enet_list_remove (enet_list_begin (& fragments));
+                  
+                  enet_free (fragment);
+                }
+                
+                return -1;
+            }
+            
+            fragment.FragmentOffset = fragmentOffset;
+            fragment.FragmentLength = fragmentLength;
+            fragment.Packet = packet;
+            fragment.Command.Header.Command = commandNumber;
+            fragment.Command.Header.ChannelId = channelId;
+            fragment.Command.SendFragment.StartSequenceNumber = startSequenceNumber;
+            fragment.Command.SendFragment.DataLength = IPAddress.HostToNetworkOrder(fragmentLength);
+            fragment.Command.SendFragment.FragmentCount = IPAddress.HostToNetworkOrder(fragmentCount);
+            fragment.Command.SendFragment.FragmentNumber = IPAddress.HostToNetworkOrder(fragmentNumber);
+            fragment.Command.SendFragment.TotalLength = IPAddress.HostToNetworkOrder(packet.Data.Length);
+            fragment.Command.SendFragment.FragmentOffset = IPAddress.NetworkToHostOrder(fragmentOffset);
+            
+            fragments.AddLast(fragment);
+          }
+
+          packet._referenceCount += fragmentNumber;
+
+          while (! enet_list_empty (& fragments))
+          {
+            fragment = (ENetOutgoingCommand *) enet_list_remove (enet_list_begin (& fragments));
+    
+            SetupOutgoingCommand(fragment);
+          }
+
+          return 0;
+      }
+
+      command.Header.ChannelId = channelId;
+
+      if ((packet.Flags & (ENetPacketFlag.Reliable | ENetPacketFlag.Unsequenced)) == ENetPacketFlag.Unsequenced)
+      {
+          command.Header.Command = ENET_PROTOCOL_COMMAND_SEND_UNSEQUENCED | ENET_PROTOCOL_COMMAND_FLAG_UNSEQUENCED;
+          command.SendUnsequenced.DataLength = IPAddress.HostToNetworkOrder(packet.DataLength);
+      }
+      else 
+      if (packet -> flags & ENET_PACKET_FLAG_RELIABLE || channel -> outgoingUnreliableSequenceNumber >= 0xFFFF)
+      {
+          command.header.command = ENET_PROTOCOL_COMMAND_SEND_RELIABLE | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
+          command.sendReliable.dataLength = IPAddress.HostToNetworkOrder (packet -> dataLength);
       }
       else
       {
-         commandNumber = ENET_PROTOCOL_COMMAND_SEND_FRAGMENT | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
-         startSequenceNumber = ENET_HOST_TO_NET_16 (channel -> outgoingReliableSequenceNumber + 1);
-      }
-        
-      enet_list_clear (& fragments);
-
-      for (fragmentNumber = 0,
-             fragmentOffset = 0;
-           fragmentOffset < packet -> dataLength;
-           ++ fragmentNumber,
-             fragmentOffset += fragmentLength)
-      {
-         if (packet -> dataLength - fragmentOffset < fragmentLength)
-           fragmentLength = packet -> dataLength - fragmentOffset;
-
-         fragment = (ENetOutgoingCommand *) enet_malloc (sizeof (ENetOutgoingCommand));
-         if (fragment == NULL)
-         {
-            while (! enet_list_empty (& fragments))
-            {
-               fragment = (ENetOutgoingCommand *) enet_list_remove (enet_list_begin (& fragments));
-               
-               enet_free (fragment);
-            }
-            
-            return -1;
-         }
-         
-         fragment -> fragmentOffset = fragmentOffset;
-         fragment -> fragmentLength = fragmentLength;
-         fragment -> packet = packet;
-         fragment -> command.header.command = commandNumber;
-         fragment -> command.header.channelID = channelID;
-         fragment -> command.sendFragment.startSequenceNumber = startSequenceNumber;
-         fragment -> command.sendFragment.dataLength = ENET_HOST_TO_NET_16 (fragmentLength);
-         fragment -> command.sendFragment.fragmentCount = ENET_HOST_TO_NET_32 (fragmentCount);
-         fragment -> command.sendFragment.fragmentNumber = ENET_HOST_TO_NET_32 (fragmentNumber);
-         fragment -> command.sendFragment.totalLength = ENET_HOST_TO_NET_32 (packet -> dataLength);
-         fragment -> command.sendFragment.fragmentOffset = ENET_NET_TO_HOST_32 (fragmentOffset);
-        
-         enet_list_insert (enet_list_end (& fragments), fragment);
+          command.Header.command = ENetProtocolCommand.SendUnreliable;
+          command.SendUnreliable.DataLength = IPAddress.HostToNetworkOrder(packet.Data.Length);
       }
 
-      packet -> referenceCount += fragmentNumber;
-
-      while (! enet_list_empty (& fragments))
-      {
-         fragment = (ENetOutgoingCommand *) enet_list_remove (enet_list_begin (& fragments));
- 
-         enet_peer_setup_outgoing_command (peer, fragment);
-      }
+      if (QueueOutgoingCommand(&command, packet, 0, packet.Data.Length) is null)
+        return -1;
 
       return 0;
-   }
-
-   command.header.channelID = channelID;
-
-   if ((packet -> flags & (ENET_PACKET_FLAG_RELIABLE | ENET_PACKET_FLAG_UNSEQUENCED)) == ENET_PACKET_FLAG_UNSEQUENCED)
-   {
-      command.header.command = ENET_PROTOCOL_COMMAND_SEND_UNSEQUENCED | ENET_PROTOCOL_COMMAND_FLAG_UNSEQUENCED;
-      command.sendUnsequenced.dataLength = ENET_HOST_TO_NET_16 (packet -> dataLength);
-   }
-   else 
-   if (packet -> flags & ENET_PACKET_FLAG_RELIABLE || channel -> outgoingUnreliableSequenceNumber >= 0xFFFF)
-   {
-      command.header.command = ENET_PROTOCOL_COMMAND_SEND_RELIABLE | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
-      command.sendReliable.dataLength = ENET_HOST_TO_NET_16 (packet -> dataLength);
-   }
-   else
-   {
-      command.header.command = ENET_PROTOCOL_COMMAND_SEND_UNRELIABLE;
-      command.sendUnreliable.dataLength = ENET_HOST_TO_NET_16 (packet -> dataLength);
-   }
-
-   if (enet_peer_queue_outgoing_command (peer, & command, packet, 0, packet -> dataLength) == NULL)
-     return -1;
-
-   return 0;
+    }
 }
 
 /** Attempts to dequeue any incoming queued packet.
@@ -247,7 +234,7 @@ enet_peer_receive (ENetPeer * peer, enet_uint8 * channelID)
 }
 
 static void
-enet_peer_reset_outgoing_commands (ENetList * queue)
+enet_peer_reset_outgoing_commands (LinkedList<TODO> queue)
 {
     ENetOutgoingCommand * outgoingCommand;
 
@@ -268,7 +255,7 @@ enet_peer_reset_outgoing_commands (ENetList * queue)
 }
 
 static void
-enet_peer_remove_incoming_commands (ENetList * queue, ENetListIterator startCommand, ENetListIterator endCommand, ENetIncomingCommand * excludeCommand)
+enet_peer_remove_incoming_commands (LinkedList<TODO> queue, ENetListIterator startCommand, ENetListIterator endCommand, ENetIncomingCommand * excludeCommand)
 {
     ENetListIterator currentCommand;    
     
@@ -299,7 +286,7 @@ enet_peer_remove_incoming_commands (ENetList * queue, ENetListIterator startComm
 }
 
 static void
-enet_peer_reset_incoming_commands (ENetList * queue)
+enet_peer_reset_incoming_commands (LinkedList<TODO> queue)
 {
     enet_peer_remove_incoming_commands(queue, enet_list_begin (queue), enet_list_end (queue), NULL);
 }
@@ -370,8 +357,7 @@ enet_peer_on_disconnect (ENetPeer * peer)
     @remarks The foreign host represented by the peer is not notified of the disconnection and will timeout
     on its connection to the local host.
 */
-void
-enet_peer_reset (ENetPeer * peer)
+void enet_peer_reset (ENetPeer * peer)
 {
     enet_peer_on_disconnect (peer);
         
@@ -510,7 +496,7 @@ enet_peer_disconnect_now (ENetPeer * peer, enet_uint32 data)
 
         command.header.command = ENET_PROTOCOL_COMMAND_DISCONNECT | ENET_PROTOCOL_COMMAND_FLAG_UNSEQUENCED;
         command.header.channelID = 0xFF;
-        command.disconnect.data = ENET_HOST_TO_NET_32 (data);
+        command.disconnect.data = IPAddress.HostToNetworkOrder (data);
 
         enet_peer_queue_outgoing_command (peer, & command, NULL, 0, 0);
 
@@ -541,7 +527,7 @@ enet_peer_disconnect (ENetPeer * peer, enet_uint32 data)
 
     command.header.command = ENET_PROTOCOL_COMMAND_DISCONNECT;
     command.header.channelID = 0xFF;
-    command.disconnect.data = ENET_HOST_TO_NET_32 (data);
+    command.disconnect.data = IPAddress.HostToNetworkOrder (data);
 
     if (peer -> state == ENET_PEER_STATE_CONNECTED || peer -> state == ENET_PEER_STATE_DISCONNECT_LATER)
       command.header.command |= ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
@@ -659,16 +645,16 @@ enet_peer_setup_outgoing_command (ENetPeer * peer, ENetOutgoingCommand * outgoin
     outgoingCommand -> sentTime = 0;
     outgoingCommand -> roundTripTimeout = 0;
     outgoingCommand -> roundTripTimeoutLimit = 0;
-    outgoingCommand -> command.header.reliableSequenceNumber = ENET_HOST_TO_NET_16 (outgoingCommand -> reliableSequenceNumber);
+    outgoingCommand -> command.header.reliableSequenceNumber = IPAddress.HostToNetworkOrder (outgoingCommand -> reliableSequenceNumber);
 
     switch (outgoingCommand -> command.header.command & ENET_PROTOCOL_COMMAND_MASK)
     {
     case ENET_PROTOCOL_COMMAND_SEND_UNRELIABLE:
-        outgoingCommand -> command.sendUnreliable.unreliableSequenceNumber = ENET_HOST_TO_NET_16 (outgoingCommand -> unreliableSequenceNumber);
+        outgoingCommand -> command.sendUnreliable.unreliableSequenceNumber = IPAddress.HostToNetworkOrder (outgoingCommand -> unreliableSequenceNumber);
         break;
 
     case ENET_PROTOCOL_COMMAND_SEND_UNSEQUENCED:
-        outgoingCommand -> command.sendUnsequenced.unsequencedGroup = ENET_HOST_TO_NET_16 (peer -> outgoingUnsequencedGroup);
+        outgoingCommand -> command.sendUnsequenced.unsequencedGroup = IPAddress.HostToNetworkOrder (peer -> outgoingUnsequencedGroup);
         break;
     
     default:
@@ -881,7 +867,7 @@ enet_peer_queue_incoming_command (ENetPeer * peer, const ENetProtocol * command,
 
     case ENET_PROTOCOL_COMMAND_SEND_UNRELIABLE:
     case ENET_PROTOCOL_COMMAND_SEND_UNRELIABLE_FRAGMENT:
-       unreliableSequenceNumber = ENET_NET_TO_HOST_16 (command -> sendUnreliable.unreliableSequenceNumber);
+       unreliableSequenceNumber = IPAddress.NetworkToHostOrder (command -> sendUnreliable.unreliableSequenceNumber);
 
        if (reliableSequenceNumber == channel -> incomingReliableSequenceNumber && 
            unreliableSequenceNumber <= channel -> incomingUnreliableSequenceNumber)

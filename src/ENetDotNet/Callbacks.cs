@@ -33,7 +33,7 @@ enet_linked_version (void)
 {
     return ENET_VERSION;
 }
-           
+
 void *
 enet_malloc (size_t size)
 {

@@ -11,36 +11,6 @@
 
 static enet_uint32 timeBase = 0;
 
-int
-enet_initialize (void)
-{
-    WORD versionRequested = MAKEWORD (1, 1);
-    WSADATA wsaData;
-   
-    if (WSAStartup (versionRequested, & wsaData))
-       return -1;
-
-    if (LOBYTE (wsaData.wVersion) != 1||
-        HIBYTE (wsaData.wVersion) != 1)
-    {
-       WSACleanup ();
-       
-       return -1;
-    }
-
-    timeBeginPeriod (1);
-
-    return 0;
-}
-
-void
-enet_deinitialize (void)
-{
-    timeEndPeriod (1);
-
-    WSACleanup ();
-}
-
 enet_uint32
 enet_host_random_seed (void)
 {
@@ -149,7 +119,7 @@ enet_socket_bind (ENetSocket socket, const ENetAddress * address)
 
     if (address != NULL)
     {
-       sin.sin_port = ENET_HOST_TO_NET_16 (address -> port);
+       sin.sin_port = IPAddress.HostToNetworkOrder (address -> port);
        sin.sin_addr.s_addr = address -> host;
     }
     else
@@ -173,7 +143,7 @@ enet_socket_get_address (ENetSocket socket, ENetAddress * address)
       return -1;
 
     address -> host = (enet_uint32) sin.sin_addr.s_addr;
-    address -> port = ENET_NET_TO_HOST_16 (sin.sin_port);
+    address -> port = IPAddress.NetworkToHostOrder (sin.sin_port);
 
     return 0;
 }
@@ -263,7 +233,7 @@ enet_socket_connect (ENetSocket socket, const ENetAddress * address)
     memset (& sin, 0, sizeof (struct sockaddr_in));
 
     sin.sin_family = AF_INET;
-    sin.sin_port = ENET_HOST_TO_NET_16 (address -> port);
+    sin.sin_port = IPAddress.HostToNetworkOrder (address -> port);
     sin.sin_addr.s_addr = address -> host;
 
     result = connect (socket, (struct sockaddr *) & sin, sizeof (struct sockaddr_in));
@@ -290,7 +260,7 @@ enet_socket_accept (ENetSocket socket, ENetAddress * address)
     if (address != NULL)
     {
         address -> host = (enet_uint32) sin.sin_addr.s_addr;
-        address -> port = ENET_NET_TO_HOST_16 (sin.sin_port);
+        address -> port = IPAddress.NetworkToHostOrder (sin.sin_port);
     }
 
     return result;
@@ -323,7 +293,7 @@ enet_socket_send (ENetSocket socket,
         memset (& sin, 0, sizeof (struct sockaddr_in));
 
         sin.sin_family = AF_INET;
-        sin.sin_port = ENET_HOST_TO_NET_16 (address -> port);
+        sin.sin_port = IPAddress.HostToNetworkOrder (address -> port);
         sin.sin_addr.s_addr = address -> host;
     }
 
@@ -383,7 +353,7 @@ enet_socket_receive (ENetSocket socket,
     if (address != NULL)
     {
         address -> host = (enet_uint32) sin.sin_addr.s_addr;
-        address -> port = ENET_NET_TO_HOST_16 (sin.sin_port);
+        address -> port = IPAddress.NetworkToHostOrder (sin.sin_port);
     }
 
     return (int) recvLength;

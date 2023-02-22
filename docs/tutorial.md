@@ -1,48 +1,10 @@
-/**
-@page Tutorial Tutorial
+Tutorial
+========
 
-@ref Initialization
+## Initialization
 
-@ref CreateServer
+In the C# version of ENet, no initialization is necessary.
 
-@ref CreateClient
-
-@ref ManageHost
-
-@ref SendingPacket
-
-@ref Disconnecting
-
-@ref Connecting
-
-@section Initialization Initialization
-
-You should include the file <enet/enet.h> when using ENet. Do not
-include <enet.h> without the directory prefix, as this may cause
-file name conflicts on some systems.
-
-Before using ENet, you must call enet_initialize() to initialize the
-library. Upon program exit, you should call enet_deinitialize() so
-that the library may clean up any used resources.
-
-@code
-#include <enet/enet.h>
-
-int 
-main (int argc, char ** argv) 
-{
-    if (enet_initialize () != 0)
-    {
-        fprintf (stderr, "An error occurred while initializing ENet.\n");
-        return EXIT_FAILURE;
-    }
-    atexit (enet_deinitialize);
-    ...
-    ...
-    ...
-}
-@endcode
-        
 @section CreateServer Creating an ENet server
 
 Servers in ENet are constructed with enet_host_create(). You must

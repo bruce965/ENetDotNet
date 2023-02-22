@@ -21,11 +21,11 @@ typedef SOCKET ENetSocket;
 
 #define ENET_SOCKET_NULL INVALID_SOCKET
 
-#define ENET_HOST_TO_NET_16(value) (htons (value))
-#define ENET_HOST_TO_NET_32(value) (htonl (value))
+#define IPAddress.HostToNetworkOrder(value) (htons (value))
+#define IPAddress.HostToNetworkOrder(value) (htonl (value))
 
-#define ENET_NET_TO_HOST_16(value) (ntohs (value))
-#define ENET_NET_TO_HOST_32(value) (ntohl (value))
+#define IPAddress.NetworkToHostOrder(value) (ntohs (value))
+#define IPAddress.NetworkToHostOrder(value) (ntohl (value))
 
 typedef struct
 {

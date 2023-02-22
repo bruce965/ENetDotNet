@@ -1,21 +1,3 @@
-/** 
- @file list.c
- @brief ENet linked list functions
-*/
-#define ENET_BUILDING_LIB 1
-#include "enet/enet.h"
-
-/** 
-    @defgroup list ENet linked list utility functions
-    @ingroup private
-    @{
-*/
-void
-enet_list_clear (ENetList * list)
-{
-   list -> sentinel.next = & list -> sentinel;
-   list -> sentinel.previous = & list -> sentinel;
-}
 
 ENetListIterator
 enet_list_insert (ENetListIterator position, void * data)
@@ -71,5 +53,3 @@ enet_list_size (ENetList * list)
    
    return size;
 }
-
-/** @} */

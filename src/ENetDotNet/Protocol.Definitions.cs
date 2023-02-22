@@ -1,198 +1,203 @@
-/** 
- @file  protocol.h
- @brief ENet protocol
-*/
-#ifndef __ENET_PROTOCOL_H__
-#define __ENET_PROTOCOL_H__
+using System.Runtime.InteropServices;
 
-#include "enet/types.h"
+namespace ENetDotNet;
 
-enum
-{
-   ENET_PROTOCOL_MINIMUM_MTU             = 576,
-   ENET_PROTOCOL_MAXIMUM_MTU             = 4096,
-   ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS = 32,
-   ENET_PROTOCOL_MINIMUM_WINDOW_SIZE     = 4096,
-   ENET_PROTOCOL_MAXIMUM_WINDOW_SIZE     = 65536,
-   ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT   = 1,
-   ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT   = 255,
-   ENET_PROTOCOL_MAXIMUM_PEER_ID         = 0xFFF,
-   ENET_PROTOCOL_MAXIMUM_FRAGMENT_COUNT  = 1024 * 1024
+partial struct ENetProtocol {
+    public const int MinimumMtu = 576;
+    public const int MaximumMtu = 4096;
+    public const int MaximumPacketCommands = 32;
+    public const int MinimumWindowSize = 4096;
+    public const int MaximumWindowSize = 65536;
+    public const int MinimumChannelCount = 1;
+    public const int MaximumChannelCount = 255;
+    public const int MaximumPeerId = 0xFFF;
+    public const int MaximumFragmentCount = 1024 * 1024;
 };
 
-typedef enum _ENetProtocolCommand
+public enum ENetProtocolCommand
 {
-   ENET_PROTOCOL_COMMAND_NONE               = 0,
-   ENET_PROTOCOL_COMMAND_ACKNOWLEDGE        = 1,
-   ENET_PROTOCOL_COMMAND_CONNECT            = 2,
-   ENET_PROTOCOL_COMMAND_VERIFY_CONNECT     = 3,
-   ENET_PROTOCOL_COMMAND_DISCONNECT         = 4,
-   ENET_PROTOCOL_COMMAND_PING               = 5,
-   ENET_PROTOCOL_COMMAND_SEND_RELIABLE      = 6,
-   ENET_PROTOCOL_COMMAND_SEND_UNRELIABLE    = 7,
-   ENET_PROTOCOL_COMMAND_SEND_FRAGMENT      = 8,
-   ENET_PROTOCOL_COMMAND_SEND_UNSEQUENCED   = 9,
-   ENET_PROTOCOL_COMMAND_BANDWIDTH_LIMIT    = 10,
-   ENET_PROTOCOL_COMMAND_THROTTLE_CONFIGURE = 11,
-   ENET_PROTOCOL_COMMAND_SEND_UNRELIABLE_FRAGMENT = 12,
-   ENET_PROTOCOL_COMMAND_COUNT              = 13,
+    None = 0,
+    Acknowledge = 1,
+    Connect = 2,
+    VerifyConnect = 3,
+    Disconnect = 4,
+    Ping = 5,
+    SendReliable = 6,
+    SendUnreliable = 7,
+    SendFragment = 8,
+    SendUnsequenced = 9,
+    BandwidthLimit = 10,
+    ThrottleConfigure = 11,
+    SendUnreliableFragment = 12,
+    Count = 13,
 
-   ENET_PROTOCOL_COMMAND_MASK               = 0x0F
-} ENetProtocolCommand;
+    Mask = 0x0F,
+}
 
-typedef enum _ENetProtocolFlag
+[Flags]
+public enum ENetProtocolFlag
 {
-   ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE = (1 << 7),
-   ENET_PROTOCOL_COMMAND_FLAG_UNSEQUENCED = (1 << 6),
+    COMMAND_ACKNOWLEDGE = (1 << 7),
+    COMMAND_UNSEQUENCED = (1 << 6),
 
-   ENET_PROTOCOL_HEADER_FLAG_COMPRESSED = (1 << 14),
-   ENET_PROTOCOL_HEADER_FLAG_SENT_TIME  = (1 << 15),
-   ENET_PROTOCOL_HEADER_FLAG_MASK       = ENET_PROTOCOL_HEADER_FLAG_COMPRESSED | ENET_PROTOCOL_HEADER_FLAG_SENT_TIME,
+    HEADER_COMPRESSED = (1 << 14),
+    HEADER_SENT_TIME  = (1 << 15),
+    HEADER_MASK       = HEADER_COMPRESSED | HEADER_SENT_TIME,
 
-   ENET_PROTOCOL_HEADER_SESSION_MASK    = (3 << 12),
-   ENET_PROTOCOL_HEADER_SESSION_SHIFT   = 12
-} ENetProtocolFlag;
+    HEADER_SESSION_MASK    = (3 << 12),
+    HEADER_SESSION_SHIFT   = 12
+}
 
-#ifdef _MSC_VER
-#pragma pack(push, 1)
-#define ENET_PACKED
-#elif defined(__GNUC__) || defined(__clang__)
-#define ENET_PACKED __attribute__ ((packed))
-#else
-#define ENET_PACKED
-#endif
-
-typedef struct _ENetProtocolHeader
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolHeader
 {
-   enet_uint16 peerID;
-   enet_uint16 sentTime;
-} ENET_PACKED ENetProtocolHeader;
+    public ushort PeerID;
+    public ushort SentTime;
+}
 
-typedef struct _ENetProtocolCommandHeader
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolCommandHeader
 {
-   enet_uint8 command;
-   enet_uint8 channelID;
-   enet_uint16 reliableSequenceNumber;
-} ENET_PACKED ENetProtocolCommandHeader;
+    public ENetProtocolCommand Command;
+    public byte ChannelId;
+    public ushort ReliableSequenceNumber;
+}
 
-typedef struct _ENetProtocolAcknowledge
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolAcknowledge
 {
-   ENetProtocolCommandHeader header;
-   enet_uint16 receivedReliableSequenceNumber;
-   enet_uint16 receivedSentTime;
-} ENET_PACKED ENetProtocolAcknowledge;
+    public ENetProtocolCommandHeader Header;
+    public ushort ReceivedReliableSequenceNumber;
+    public ushort ReceivedSentTime;
+}
 
-typedef struct _ENetProtocolConnect
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolConnect
 {
-   ENetProtocolCommandHeader header;
-   enet_uint16 outgoingPeerID;
-   enet_uint8  incomingSessionID;
-   enet_uint8  outgoingSessionID;
-   enet_uint32 mtu;
-   enet_uint32 windowSize;
-   enet_uint32 channelCount;
-   enet_uint32 incomingBandwidth;
-   enet_uint32 outgoingBandwidth;
-   enet_uint32 packetThrottleInterval;
-   enet_uint32 packetThrottleAcceleration;
-   enet_uint32 packetThrottleDeceleration;
-   enet_uint32 connectID;
-   enet_uint32 data;
-} ENET_PACKED ENetProtocolConnect;
+    public ENetProtocolCommandHeader Header;
+    public ushort OutgoingPeerID;
+    public byte IncomingSessionID;
+    public byte OutgoingSessionID;
+    public uint Mtu;
+    public uint WindowSize;
+    public uint ChannelCount;
+    public uint IncomingBandwidth;
+    public uint OutgoingBandwidth;
+    public uint PacketThrottleInterval;
+    public uint PacketThrottleAcceleration;
+    public uint PacketThrottleDeceleration;
+    public uint ConnectID;
+    public uint Data;
+}
 
-typedef struct _ENetProtocolVerifyConnect
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolVerifyConnect
 {
-   ENetProtocolCommandHeader header;
-   enet_uint16 outgoingPeerID;
-   enet_uint8  incomingSessionID;
-   enet_uint8  outgoingSessionID;
-   enet_uint32 mtu;
-   enet_uint32 windowSize;
-   enet_uint32 channelCount;
-   enet_uint32 incomingBandwidth;
-   enet_uint32 outgoingBandwidth;
-   enet_uint32 packetThrottleInterval;
-   enet_uint32 packetThrottleAcceleration;
-   enet_uint32 packetThrottleDeceleration;
-   enet_uint32 connectID;
-} ENET_PACKED ENetProtocolVerifyConnect;
+    public ENetProtocolCommandHeader Header;
+    public ushort OutgoingPeerID;
+    public byte IncomingSessionID;
+    public byte OutgoingSessionID;
+    public uint Mtu;
+    public uint WindowSize;
+    public uint ChannelCount;
+    public uint IncomingBandwidth;
+    public uint OutgoingBandwidth;
+    public uint PacketThrottleInterval;
+    public uint PacketThrottleAcceleration;
+    public uint PacketThrottleDeceleration;
+    public uint ConnectID;
+}
 
-typedef struct _ENetProtocolBandwidthLimit
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolBandwidthLimit
 {
-   ENetProtocolCommandHeader header;
-   enet_uint32 incomingBandwidth;
-   enet_uint32 outgoingBandwidth;
-} ENET_PACKED ENetProtocolBandwidthLimit;
+    public ENetProtocolCommandHeader Header;
+    public uint IncomingBandwidth;
+    public uint OutgoingBandwidth;
+}
 
-typedef struct _ENetProtocolThrottleConfigure
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolThrottleConfigure
 {
-   ENetProtocolCommandHeader header;
-   enet_uint32 packetThrottleInterval;
-   enet_uint32 packetThrottleAcceleration;
-   enet_uint32 packetThrottleDeceleration;
-} ENET_PACKED ENetProtocolThrottleConfigure;
+    public ENetProtocolCommandHeader Header;
+    public uint PacketThrottleInterval;
+    public uint PacketThrottleAcceleration;
+    public uint PacketThrottleDeceleration;
+}
 
-typedef struct _ENetProtocolDisconnect
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolDisconnect
 {
-   ENetProtocolCommandHeader header;
-   enet_uint32 data;
-} ENET_PACKED ENetProtocolDisconnect;
+    public ENetProtocolCommandHeader Header;
+    public uint Data;
+}
 
-typedef struct _ENetProtocolPing
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolPing
 {
-   ENetProtocolCommandHeader header;
-} ENET_PACKED ENetProtocolPing;
+    public ENetProtocolCommandHeader Header;
+}
 
-typedef struct _ENetProtocolSendReliable
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolSendReliable
 {
-   ENetProtocolCommandHeader header;
-   enet_uint16 dataLength;
-} ENET_PACKED ENetProtocolSendReliable;
+    public ENetProtocolCommandHeader Header;
+    public ushort DataLength;
+}
 
-typedef struct _ENetProtocolSendUnreliable
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolSendUnreliable
 {
-   ENetProtocolCommandHeader header;
-   enet_uint16 unreliableSequenceNumber;
-   enet_uint16 dataLength;
-} ENET_PACKED ENetProtocolSendUnreliable;
+    public ENetProtocolCommandHeader Header;
+    public ushort UnreliableSequenceNumber;
+    public ushort DataLength;
+}
 
-typedef struct _ENetProtocolSendUnsequenced
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolSendUnsequenced
 {
-   ENetProtocolCommandHeader header;
-   enet_uint16 unsequencedGroup;
-   enet_uint16 dataLength;
-} ENET_PACKED ENetProtocolSendUnsequenced;
+    public ENetProtocolCommandHeader Header;
+    public ushort UnsequencedGroup;
+    public ushort DataLength;
+}
 
-typedef struct _ENetProtocolSendFragment
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ENetProtocolSendFragment
 {
-   ENetProtocolCommandHeader header;
-   enet_uint16 startSequenceNumber;
-   enet_uint16 dataLength;
-   enet_uint32 fragmentCount;
-   enet_uint32 fragmentNumber;
-   enet_uint32 totalLength;
-   enet_uint32 fragmentOffset;
-} ENET_PACKED ENetProtocolSendFragment;
+    public ENetProtocolCommandHeader Header;
+    public ushort StartSequenceNumber;
+    public ushort DataLength;
+    public uint FragmentCount;
+    public uint FragmentNumber;
+    public uint TotalLength;
+    public uint FragmentOffset;
+}
 
-typedef union _ENetProtocol
+[StructLayout(LayoutKind.Explicit, Pack = 1)]
+public partial struct ENetProtocol
 {
-   ENetProtocolCommandHeader header;
-   ENetProtocolAcknowledge acknowledge;
-   ENetProtocolConnect connect;
-   ENetProtocolVerifyConnect verifyConnect;
-   ENetProtocolDisconnect disconnect;
-   ENetProtocolPing ping;
-   ENetProtocolSendReliable sendReliable;
-   ENetProtocolSendUnreliable sendUnreliable;
-   ENetProtocolSendUnsequenced sendUnsequenced;
-   ENetProtocolSendFragment sendFragment;
-   ENetProtocolBandwidthLimit bandwidthLimit;
-   ENetProtocolThrottleConfigure throttleConfigure;
-} ENET_PACKED ENetProtocol;
-
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
-
-#endif /* __ENET_PROTOCOL_H__ */
-
+    [FieldOffset(0)]
+    public ENetProtocolCommandHeader Header;
+    [FieldOffset(0)]
+    public ENetProtocolAcknowledge Acknowledge;
+    [FieldOffset(0)]
+    public ENetProtocolConnect Connect;
+    [FieldOffset(0)]
+    public ENetProtocolVerifyConnect VerifyConnect;
+    [FieldOffset(0)]
+    public ENetProtocolDisconnect Disconnect;
+    [FieldOffset(0)]
+    public ENetProtocolPing Ping;
+    [FieldOffset(0)]
+    public ENetProtocolSendReliable SendReliable;
+    [FieldOffset(0)]
+    public ENetProtocolSendUnreliable SendUnreliable;
+    [FieldOffset(0)]
+    public ENetProtocolSendUnsequenced SendUnsequenced;
+    [FieldOffset(0)]
+    public ENetProtocolSendFragment SendFragment;
+    [FieldOffset(0)]
+    public ENetProtocolBandwidthLimit BandwidthLimit;
+    [FieldOffset(0)]
+    public ENetProtocolThrottleConfigure ThrottleConfigure;
+}

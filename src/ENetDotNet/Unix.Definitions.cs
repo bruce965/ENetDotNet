@@ -1,7 +1,4 @@
-/** 
- @file  unix.h
- @brief ENet Unix header
-*/
+
 #ifndef __ENET_UNIX_H__
 #define __ENET_UNIX_H__
 
@@ -17,15 +14,20 @@
 #define ENET_BUFFER_MAXIMUM MSG_MAXIOVLEN
 #endif
 
+/** 
+@file  unix.h
+@brief ENet Unix header
+*/
 typedef int ENetSocket;
 
 #define ENET_SOCKET_NULL -1
 
-#define ENET_HOST_TO_NET_16(value) (htons (value)) /**< macro that converts host to net byte-order of a 16-bit value */
-#define ENET_HOST_TO_NET_32(value) (htonl (value)) /**< macro that converts host to net byte-order of a 32-bit value */
 
-#define ENET_NET_TO_HOST_16(value) (ntohs (value)) /**< macro that converts net to host byte-order of a 16-bit value */
-#define ENET_NET_TO_HOST_32(value) (ntohl (value)) /**< macro that converts net to host byte-order of a 32-bit value */
+#define IPAddress.HostToNetworkOrder(value) (htons (value)) /**< macro that converts host to net byte-order of a 16-bit value */
+#define IPAddress.HostToNetworkOrder(value) (htonl (value)) /**< macro that converts host to net byte-order of a 32-bit value */
+
+#define IPAddress.NetworkToHostOrder(value) (ntohs (value)) /**< macro that converts net to host byte-order of a 16-bit value */
+#define IPAddress.NetworkToHostOrder(value) (ntohl (value)) /**< macro that converts net to host byte-order of a 32-bit value */
 
 typedef struct
 {
